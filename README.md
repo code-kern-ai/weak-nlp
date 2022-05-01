@@ -1,6 +1,6 @@
 ![nlp-3](banner.png)
 
-# nlp-i3
+# 🔮 nlp-i3
 Intelligent information integration based on weak supervision
 
 ## Installation
