@@ -131,16 +131,17 @@ class CNLM(weak_nlp.NoisyLabelMatrix):
         cnlm_df = cnlm_df.set_index("record")
         for vector in self.vectors_noisy:
             vector_df = vector.associations
-            vector_df["prediction"] = vector_df.apply(
-                lambda x: [
-                    x["label"],
-                    stats_lkp[(vector.identifier, x["label"])]["precision"]
-                    * (x["confidence"]),
-                ],
-                axis=1,
-            )
-            vector_series = vector_df.set_index("record")["prediction"]
-            cnlm_df[vector.identifier] = vector_series
+            if len(vector_df) > 0:
+                vector_df["prediction"] = vector_df.apply(
+                    lambda x: [
+                        x["label"],
+                        stats_lkp[(vector.identifier, x["label"])]["precision"]
+                        * (x["confidence"]),
+                    ],
+                    axis=1,
+                )
+                vector_series = vector_df.set_index("record")["prediction"]
+                cnlm_df[vector.identifier] = vector_series
         cnlm_df = cnlm_df.loc[~(cnlm_df.isnull()).all(axis=1)]
         return cnlm_df.fillna("-")  # hard to deal with np.nan
 
