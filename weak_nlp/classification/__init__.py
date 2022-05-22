@@ -12,6 +12,10 @@ class CNLM(weak_nlp.NoisyLabelMatrix):
     def __init__(self, vectors, calc_quality=True, calc_quantity=True):
         super().__init__(vectors)
         if calc_quality:
+            if self.vector_reference is None:
+                raise Exception(
+                    "Can't calculate the quality metrics without reference vector"
+                )
             self._set_source_qualities()
         if calc_quantity:
             self._set_source_quantity()
@@ -25,6 +29,14 @@ class CNLM(weak_nlp.NoisyLabelMatrix):
         # We do so via joining the sets on which we have pairs, and compare the actual and noisy label
         for idx, vector_noisy in enumerate(self.vectors_noisy):
             if not vector_noisy.is_faulty:
+
+                quality = {}
+                for label_name in vector_noisy.associations["label"].dropna().unique():
+                    quality[label_name] = {
+                        "true_positives": 0,
+                        "false_positives": 0,
+                    }
+
                 df_inner_join = (
                     self.vector_reference.associations.set_index("record")
                     .join(
@@ -36,7 +48,6 @@ class CNLM(weak_nlp.NoisyLabelMatrix):
                     .reset_index()
                 )
 
-                quality = {}
                 for label_name, df_grouped in df_inner_join.groupby("label_noisy"):
                     num_intersections = len(df_grouped)
                     true_positives = (
@@ -93,7 +104,9 @@ class CNLM(weak_nlp.NoisyLabelMatrix):
         statistics = []
         for vector_noisy in self.vectors_noisy:
             vector_stats = {"identifier": vector_noisy.identifier}
-            for label_name in vector_noisy.quantity.keys():
+            quantity_keys = list(vector_noisy.quantity.keys())
+            quality_keys = list(vector_noisy.quality.keys())
+            for label_name in set(quantity_keys + quality_keys):
                 vector_stats["label_name"] = label_name
                 quality = vector_noisy.quality.get(label_name)
                 if quality:
@@ -102,10 +115,15 @@ class CNLM(weak_nlp.NoisyLabelMatrix):
                 else:
                     vector_stats["true_positives"] = 0
                     vector_stats["false_positives"] = 0
-                quantity = vector_noisy.quantity[label_name]
-                vector_stats["record_coverage"] = quantity["record_coverage"]
-                vector_stats["source_conflicts"] = quantity["source_conflicts"]
-                vector_stats["source_overlaps"] = quantity["source_overlaps"]
+                quantity = vector_noisy.quantity.get(label_name)
+                if quantity:
+                    vector_stats["record_coverage"] = quantity["record_coverage"]
+                    vector_stats["source_conflicts"] = quantity["source_conflicts"]
+                    vector_stats["source_overlaps"] = quantity["source_overlaps"]
+                else:
+                    vector_stats["record_coverage"] = 0
+                    vector_stats["source_conflicts"] = 0
+                    vector_stats["source_overlaps"] = 0
                 statistics.append(vector_stats.copy())
         stats_df = pd.DataFrame(statistics)
 

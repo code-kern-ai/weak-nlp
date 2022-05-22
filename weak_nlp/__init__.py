@@ -38,17 +38,20 @@ class NoisyLabelMatrix:
     def __init__(self, vectors):
         vectors_reference = [vector for vector in vectors if vector.is_reference]
         assert (
-            len(vectors_reference) == 1
+            len(vectors_reference) <= 1
         ), "Only one vector should be the reference vector"
-        self.vector_reference = vectors_reference[0]
+        if len(vectors_reference) == 1:
+            self.vector_reference = vectors_reference[0]
+        else:
+            self.vector_reference = None
         vectors = [vector for vector in vectors if not vector.is_reference]
         vectors.sort(
             key=lambda x: x.identifier
         )  # ensure that the vectors are sorted by their identifier
         self.vectors_noisy = vectors
-        records = [vector.records for vector in self.vectors_noisy] + [
-            self.vector_reference.records
-        ]
+        records = [vector.records for vector in self.vectors_noisy]
+        if self.vector_reference is not None:
+            records += [self.vector_reference.records]
         self.records = set([item for sublist in records for item in sublist])
 
 
