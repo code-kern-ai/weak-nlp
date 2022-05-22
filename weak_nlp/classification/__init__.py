@@ -9,18 +9,14 @@ class ClassificationAssociation(weak_nlp.Association):
 
 
 class CNLM(weak_nlp.NoisyLabelMatrix):
-    def __init__(self, vectors, calc_quality=True, calc_quantity=True):
+    def __init__(self, vectors: weak_nlp.SourceVector):
         super().__init__(vectors)
-        if calc_quality:
-            if self.vector_reference is None:
-                raise Exception(
-                    "Can't calculate the quality metrics without reference vector"
-                )
-            self._set_source_qualities()
-        if calc_quantity:
-            self._set_source_quantity()
 
-    def _set_source_qualities(self):
+    def quality_metrics(self) -> pd.DataFrame:
+        if self.vector_reference is None:
+            raise Exception(
+                "Can't calculate the quality metrics without reference vector"
+            )
 
         # There is one reference vector, which has been manually labeled (e.g. in the UI)
         # we compare that vector to all other N vectors (that is we make N comparisons).
@@ -28,10 +24,10 @@ class CNLM(weak_nlp.NoisyLabelMatrix):
 
         # We do so via joining the sets on which we have pairs, and compare the actual and noisy label
         for idx, vector_noisy in enumerate(self.vectors_noisy):
-            if not vector_noisy.is_faulty:
-
+            if not vector_noisy.is_empty:
                 quality = {}
-                for label_name in vector_noisy.associations["label"].dropna().unique():
+                noisy_labels = vector_noisy.associations["label"].dropna().unique()
+                for label_name in noisy_labels:
                     quality[label_name] = {
                         "true_positives": 0,
                         "false_positives": 0,
@@ -60,7 +56,31 @@ class CNLM(weak_nlp.NoisyLabelMatrix):
                     }
                 self.vectors_noisy[idx].quality = quality.copy()
 
-    def _set_source_quantity(self):
+        statistics = []
+        for vector_noisy in self.vectors_noisy:
+            vector_stats = {"identifier": vector_noisy.identifier}
+            for label_name in vector_noisy.quality.keys():
+                vector_stats["label_name"] = label_name
+                quality = vector_noisy.quality[label_name]
+
+                vector_stats["true_positives"] = quality["true_positives"]
+                vector_stats["false_positives"] = quality["false_positives"]
+                statistics.append(vector_stats.copy())
+
+        def calc_precision(row):
+            sum_positives = row["true_positives"] + row["false_positives"]
+            if sum_positives == 0:
+                return 0.0
+            else:
+                return row["true_positives"] / sum_positives
+
+        stats_df = pd.DataFrame(statistics)
+        if len(stats_df) > 0:
+            stats_df["precision"] = stats_df.apply(calc_precision, axis=1)
+
+        return stats_df
+
+    def quantity_metrics(self) -> pd.DataFrame:
 
         # We don't need the manually labeled reference vector for this; however,
         # we require all other heuristics of that task. We always look at one specific
@@ -100,45 +120,25 @@ class CNLM(weak_nlp.NoisyLabelMatrix):
                 if vector.identifier == source:
                     self.vectors_noisy[idx].quantity = quantity.copy()
 
-    def get_stats_df(self):
         statistics = []
         for vector_noisy in self.vectors_noisy:
             vector_stats = {"identifier": vector_noisy.identifier}
-            quantity_keys = list(vector_noisy.quantity.keys())
-            quality_keys = list(vector_noisy.quality.keys())
-            for label_name in set(quantity_keys + quality_keys):
+            for label_name in vector_noisy.quantity.keys():
                 vector_stats["label_name"] = label_name
-                quality = vector_noisy.quality.get(label_name)
-                if quality:
-                    vector_stats["true_positives"] = quality["true_positives"]
-                    vector_stats["false_positives"] = quality["false_positives"]
-                else:
-                    vector_stats["true_positives"] = 0
-                    vector_stats["false_positives"] = 0
-                quantity = vector_noisy.quantity.get(label_name)
-                if quantity:
-                    vector_stats["record_coverage"] = quantity["record_coverage"]
-                    vector_stats["source_conflicts"] = quantity["source_conflicts"]
-                    vector_stats["source_overlaps"] = quantity["source_overlaps"]
-                else:
-                    vector_stats["record_coverage"] = 0
-                    vector_stats["source_conflicts"] = 0
-                    vector_stats["source_overlaps"] = 0
+
+                quantity = vector_noisy.quantity[label_name]
+                vector_stats["record_coverage"] = quantity["record_coverage"]
+                vector_stats["source_conflicts"] = quantity["source_conflicts"]
+                vector_stats["source_overlaps"] = quantity["source_overlaps"]
                 statistics.append(vector_stats.copy())
+
         stats_df = pd.DataFrame(statistics)
-
-        def calc_precision(row):
-            sum_positives = row["true_positives"] + row["false_positives"]
-            if sum_positives == 0:
-                return 0.0
-            else:
-                return row["true_positives"] / sum_positives
-
-        stats_df["precision"] = stats_df.apply(calc_precision, axis=1)
         return stats_df
 
-    def get_inference_df(self):
-        stats_df = self.get_stats_df()
+    def weakly_supervise(self) -> pd.Series:
+        stats_df = self.quality_metrics()
+        if len(stats_df) == 0:
+            raise Exception("Empty statistics; can't compute weak supervision")
         stats_lkp = stats_df.set_index(["identifier", "label_name"]).to_dict(
             orient="index"
         )  # pairwise [heuristic, label] lookup for precision
@@ -160,10 +160,10 @@ class CNLM(weak_nlp.NoisyLabelMatrix):
                 )
                 vector_series = vector_df.set_index("record")["prediction"]
                 cnlm_df[vector.identifier] = vector_series
-        cnlm_df = cnlm_df.loc[~(cnlm_df.isnull()).all(axis=1)]
-        return cnlm_df.fillna("-")  # hard to deal with np.nan
+        cnlm_df = cnlm_df.loc[~(cnlm_df.isnull()).all(axis=1)].fillna(
+            "-"
+        )  # hard to deal with np.nan
 
-    def weakly_supervise(self):
         def sigmoid(x, c=1, k=1):
             # c: slope of the function
             # k: what input should yield 0.5 probability?
@@ -188,5 +188,4 @@ class CNLM(weak_nlp.NoisyLabelMatrix):
                 confidence = sigmoid(confidence)
                 return [max_voter, confidence]
 
-        cnlm_df = self.get_inference_df()
         return cnlm_df.apply(ensemble, axis=1)
