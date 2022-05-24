@@ -18,11 +18,16 @@ class CNLM(weak_nlp.NoisyLabelMatrix):
         # we compare that vector to all other N vectors (that is we make N comparisons).
         # This way, we can easily compute the quality of one noisy heuristic
         # We do so via joining the sets on which we have pairs, and compare the actual and noisy label
+        reference_labels = list(
+            self.vector_reference.associations["label"].dropna().unique()
+        )
         for idx, vector_noisy in enumerate(self.vectors_noisy):
             if not vector_noisy.is_empty:
                 quality = {}
-                noisy_labels = vector_noisy.associations["label"].dropna().unique()
-                for label_name in noisy_labels:
+                noisy_labels = list(
+                    vector_noisy.associations["label"].dropna().unique()
+                )
+                for label_name in noisy_labels + reference_labels:
                     quality[label_name] = {
                         "true_positives": 0,
                         "false_positives": 0,

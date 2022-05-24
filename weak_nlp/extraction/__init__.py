@@ -19,12 +19,13 @@ class ENLM(weak_nlp.NoisyLabelMatrix):
     def _set_quality_metrics_inplace(self) -> None:
         df_reference = self.vector_reference.associations
 
+        reference_labels = list(df_reference["label"].dropna().unique())
         for idx, vector_noisy in enumerate(self.vectors_noisy):
             quality = {}
             df_noisy = vector_noisy.associations
 
-            noisy_labels = vector_noisy.associations["label"].dropna().unique()
-            for label_name in noisy_labels:
+            noisy_labels = list(vector_noisy.associations["label"].dropna().unique())
+            for label_name in noisy_labels + reference_labels:
                 quality[label_name] = {
                     "true_positives": 0,
                     "false_positives": 0,
@@ -89,15 +90,17 @@ class ENLM(weak_nlp.NoisyLabelMatrix):
             ].groupby(
                 ["record", "label"]
             ):
-                df_noisy_vectors_without_source_sub_record = df_noisy_vectors.loc[
-                    (df_noisy_vectors["source"] != source)
-                    & (df_noisy_vectors["record"] == record)
-                ]
+                df_noisy_vectors_flat_without_source_sub_record = (
+                    df_noisy_vectors_flat.loc[
+                        (df_noisy_vectors_flat["source"] != source)
+                        & (df_noisy_vectors_flat["record"] == record)
+                    ]
+                )
                 quantity = util.add_conflicts_and_overlaps(
                     quantity,
                     label,
                     df_noisy_vectors_sub_record_label,
-                    df_noisy_vectors_without_source_sub_record,
+                    df_noisy_vectors_flat_without_source_sub_record,
                 )
 
             for idx, vector in enumerate(self.vectors_noisy):

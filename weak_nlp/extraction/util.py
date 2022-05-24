@@ -126,28 +126,30 @@ def _ensemble(row) -> List[Tuple[str, float, int, int]]:
             merged_noisy_label_chunks, label, df_quartets_sub_label
         )
 
-    df_noisy_label_chunks = pd.DataFrame(merged_noisy_label_chunks).sort_values(
-        by="confidence", ascending=False
-    )
-
-    delete_idxs_dict = defaultdict(list)
-    for idx, row in df_noisy_label_chunks.iterrows():
-        for other_idx, other_row in df_noisy_label_chunks.drop(idx).iterrows():
-            if len(row.token_set.intersection(other_row.token_set)) > 0:
-                if other_idx not in delete_idxs_dict.keys():
-                    delete_idxs_dict[idx].append(other_idx)
-    delete_idxs_list = [
-        item for sublist in delete_idxs_dict.values() for item in sublist
-    ]
-    df_noisy_label_chunks_filtered = df_noisy_label_chunks.drop(delete_idxs_list)
-
     preds = []
-    for _, row in df_noisy_label_chunks_filtered.iterrows():
-        label = row["label"]
-        confidence = row["confidence"]
-        tokens = row["token_set"]
-        if confidence > 0:
-            confidence = common_util.sigmoid(confidence)
-            pred = label, confidence, min(tokens), max(tokens)
-            preds.append(pred)
+    if len(merged_noisy_label_chunks) > 0:
+        df_noisy_label_chunks = pd.DataFrame(merged_noisy_label_chunks)
+        df_noisy_label_chunks = df_noisy_label_chunks.sort_values(
+            by="confidence", ascending=False
+        )
+
+        delete_idxs_dict = defaultdict(list)
+        for idx, row in df_noisy_label_chunks.iterrows():
+            for other_idx, other_row in df_noisy_label_chunks.drop(idx).iterrows():
+                if len(row.token_set.intersection(other_row.token_set)) > 0:
+                    if other_idx not in delete_idxs_dict.keys():
+                        delete_idxs_dict[idx].append(other_idx)
+        delete_idxs_list = [
+            item for sublist in delete_idxs_dict.values() for item in sublist
+        ]
+        df_noisy_label_chunks_filtered = df_noisy_label_chunks.drop(delete_idxs_list)
+
+        for _, row in df_noisy_label_chunks_filtered.iterrows():
+            label = row["label"]
+            confidence = row["confidence"]
+            tokens = row["token_set"]
+            if confidence > 0:
+                confidence = common_util.sigmoid(confidence)
+                pred = label, confidence, min(tokens), max(tokens)
+                preds.append(pred)
     return preds
