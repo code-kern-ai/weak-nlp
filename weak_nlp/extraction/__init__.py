@@ -127,6 +127,7 @@ class ENLM(weak_nlp.NoisyLabelMatrix):
         stats_df = pd.DataFrame(statistics)
         if len(stats_df) > 0:
             stats_df["precision"] = stats_df.apply(common_util.calc_precision, axis=1)
+            stats_df["recall"] = stats_df.apply(common_util.calc_recall, axis=1)
         return stats_df
 
     def quantity_metrics(self) -> pd.DataFrame:

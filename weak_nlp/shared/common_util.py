@@ -13,11 +13,19 @@ def get_all_noisy_vectors_df(nlm: NoisyLabelMatrix):
 
 
 def calc_precision(row):
-    sum_positives = row["true_positives"] + row["false_positives"]
-    if sum_positives == 0:
+    denominator = row["true_positives"] + row["false_positives"]
+    if denominator == 0:
         return 0.0
     else:
-        return row["true_positives"] / sum_positives
+        return row["true_positives"] / denominator
+
+
+def calc_recall(row):
+    denominator = row["true_positives"] + row["false_negatives"]
+    if denominator == 0:
+        return 0.0
+    else:
+        return row["true_positives"] / denominator
 
 
 def sigmoid(x, c=1, k=1):
