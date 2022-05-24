@@ -1,18 +1,22 @@
-from weak_nlp import SourceVector
-from weak_nlp.classification import CNLM, ClassificationAssociation
+from collections import defaultdict
+from typing import Optional, Tuple
+
+from weak_nlp.shared import common_util
 
 
-def get_cnlm_from_df(df, lfs, target=None):
-    source_vectors = []
-    for lf in lfs:
-        associations = []
-        for idx, value in df[lf.__name__].dropna().to_dict().items():
-            associations.append(ClassificationAssociation(idx, value))
-        source_vectors.append(SourceVector(lf.__name__, False, associations))
+def _ensemble(row) -> Optional[Tuple[str, float]]:
+    voters = defaultdict(float)
+    for column in row.keys():
+        pair_or_empty = row[column]
+        if pair_or_empty != "-":
+            label_name, confidence = pair_or_empty
+            voters[label_name] += confidence
 
-    if target is not None:
-        associations = []
-        for idx, value in df[target].dropna().to_dict().items():
-            associations.append(ClassificationAssociation(idx, value))
-        source_vectors.append(SourceVector("manual", True, associations))
-    return CNLM(source_vectors)
+    max_voter = max(voters, key=voters.get)  # e.g. clickbait
+    sum_votes = sum(list(voters.values()))
+    max_vote = voters[max_voter]
+
+    confidence = max_vote - (sum_votes - max_vote)
+    if confidence > 0:
+        confidence = common_util.sigmoid(confidence)
+        return max_voter, confidence

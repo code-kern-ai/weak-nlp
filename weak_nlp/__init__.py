@@ -1,6 +1,8 @@
 import pandas as pd
 from typing import Any, Generator, Tuple, List, Optional
 
+from weak_nlp.shared import exceptions
+
 
 def create_generator(instance: Any) -> Generator[Any, Tuple[str, Any], None]:
     for key in instance.__dict__:
@@ -59,9 +61,10 @@ class SourceVector:
 class NoisyLabelMatrix:
     def __init__(self, vectors: List[SourceVector]):
         vectors_reference = [vector for vector in vectors if vector.is_reference]
-        assert (
-            len(vectors_reference) <= 1
-        ), "Only one vector should be the reference vector"
+        if len(vectors_reference) > 1:
+            raise exceptions.MissingStatsException(
+                "Only one vector should be the reference vector"
+            )
         if len(vectors_reference) == 1:
             self.vector_reference = vectors_reference[0]
         else:
