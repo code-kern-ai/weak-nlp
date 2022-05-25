@@ -18,11 +18,18 @@ class ENLM(weak_nlp.NoisyLabelMatrix):
 
     def _set_quality_metrics_inplace(self) -> None:
         df_reference = self.vector_reference.associations
+        df_reference_flat = util.flatten_range_df(df_reference, include_source=False)
 
         reference_labels = list(df_reference["label"].dropna().unique())
         for idx, vector_noisy in enumerate(self.vectors_noisy):
             quality = {}
             df_noisy = vector_noisy.associations
+            df_noisy_sub_manual = df_noisy.loc[
+                df_noisy["record"].isin(df_reference["record"].unique())
+            ].copy()
+            df_noisy_flat = util.flatten_range_df(
+                df_noisy_sub_manual, include_source=False
+            )
 
             noisy_labels = list(vector_noisy.associations["label"].dropna().unique())
             for label_name in noisy_labels + reference_labels:
@@ -32,31 +39,43 @@ class ENLM(weak_nlp.NoisyLabelMatrix):
                     "false_negatives": 0,
                 }
 
-            for (record, label), df_reference_sub_record_label in df_reference.groupby(
-                ["record", "label"]
-            ):
-                token_set_reference = util.get_token_range(
-                    df_reference_sub_record_label
-                )
+            df_joined_by_token = df_reference_flat.set_index("record").join(
+                df_noisy_flat.set_index("record"),
+                how="outer",
+                lsuffix="_reference",
+                rsuffix="_noisy",
+            )
 
-                df_noisy_sub_record_label = df_noisy.loc[
-                    (df_noisy["record"] == record) & (df_noisy["label"] == label)
-                ].copy()
+            true_positives = df_joined_by_token.loc[
+                df_joined_by_token["label_reference"]
+                == df_joined_by_token["label_noisy"]
+            ]
+            both_negatives = df_joined_by_token.loc[
+                df_joined_by_token["label_reference"]
+                != df_joined_by_token["label_noisy"]
+            ].dropna()
+            false_positives = df_joined_by_token.loc[
+                df_joined_by_token["label_reference"].isnull()
+            ]
+            false_negatives = df_joined_by_token.loc[
+                df_joined_by_token["label_noisy"].isnull()
+            ]
 
-                if len(df_noisy_sub_record_label) > 0:
-                    token_set_noisy = util.get_token_range(df_noisy_sub_record_label)
+            for label, tp_sub_label in true_positives.groupby("label_reference"):
+                quality[label]["true_positives"] += len(tp_sub_label)
 
-                    tps = len(token_set_reference.intersection(token_set_noisy))
-                    fps = len(token_set_noisy.difference(token_set_reference))
-                    fns = len(token_set_reference.difference(token_set_noisy))
-                else:
-                    tps = 0
-                    fps = 0
-                    fns = len(token_set_reference)
+            for label, fn_sub_label in both_negatives.groupby("label_reference"):
+                quality[label]["false_negatives"] += len(fn_sub_label)
 
-                quality[label]["true_positives"] += tps
-                quality[label]["false_positives"] += fps
-                quality[label]["false_negatives"] += fns
+            for label, fn_sub_label in false_negatives.groupby("label_reference"):
+                quality[label]["false_negatives"] += len(fn_sub_label)
+
+            for label, fp_sub_label in both_negatives.groupby("label_noisy"):
+                quality[label]["false_positives"] += len(fp_sub_label)
+
+            for label, fp_sub_label in false_positives.groupby("label_noisy"):
+                quality[label]["false_positives"] += len(fp_sub_label)
+
             self.vectors_noisy[idx].quality = quality.copy()
 
     def _set_quantity_metrics_inplace(self) -> None:

@@ -15,25 +15,25 @@ def get_token_range(df_record: pd.DataFrame) -> Set[int]:
     return token_set
 
 
-def flatten_range_df(df_noisy_vectors):
-    df_noisy_vectors["range"] = df_noisy_vectors.apply(
+def flatten_range_df(df, include_source=True):
+    df["range"] = df.apply(
         lambda x: list(range(x["chunk_idx_start"], x["chunk_idx_end"] + 1)),
         axis=1,
     )
 
     df_concat_ranged = []
-    for _, row in df_noisy_vectors.iterrows():
+    for _, row in df.iterrows():
         for row_idx, token_idx in enumerate(row.range):
-            df_concat_ranged.append(
-                {
-                    "record": row.record,
-                    "label": row.label,
-                    "confidence": row.confidence,
-                    "token": token_idx,
-                    "beginner": row_idx == 0,
-                    "source": row.source,
-                }
-            )
+            row_ranged = {
+                "record": row.record,
+                "label": row.label,
+                "confidence": row.confidence,
+                "token": token_idx,
+                "beginner": row_idx == 0,
+            }
+            if include_source:
+                row_ranged["source"] = row.source
+            df_concat_ranged.append(row_ranged)
     return pd.DataFrame(df_concat_ranged)
 
 
