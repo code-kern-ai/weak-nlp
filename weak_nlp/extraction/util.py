@@ -42,6 +42,7 @@ def add_conflicts_and_overlaps(
     label,
     df_noisy_vectors_sub_record_label,
     df_noisy_vectors_without_source_sub_record,
+    estimation_factor,
 ):
     for _, row in df_noisy_vectors_sub_record_label.iterrows():
         if any(
@@ -64,6 +65,8 @@ def add_conflicts_and_overlaps(
             ]
         ):
             quantity[label]["source_overlaps"] += 1
+    quantity[label]["source_conflicts"] *= estimation_factor
+    quantity[label]["source_overlaps"] *= estimation_factor
     return quantity
 
 

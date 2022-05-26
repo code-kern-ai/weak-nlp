@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from weak_nlp.shared import common_util, exceptions
 from weak_nlp.extraction import util
+from typing import Optional
 
 
 class ExtractionAssociation(weak_nlp.Association):
@@ -78,10 +79,12 @@ class ENLM(weak_nlp.NoisyLabelMatrix):
 
             self.vectors_noisy[idx].quality = quality.copy()
 
-    def _set_quantity_metrics_inplace(self) -> None:
+    def _set_quantity_metrics_inplace(
+        self, estimation_size: Optional[int] = 100
+    ) -> None:
+
         df_noisy_vectors = common_util.get_all_noisy_vectors_df(self)
         df_noisy_vectors_flat = util.flatten_range_df(df_noisy_vectors)
-
         for source, df_noisy_vectors_flat_sub_source in df_noisy_vectors_flat.groupby(
             "source"
         ):
@@ -101,12 +104,16 @@ class ENLM(weak_nlp.NoisyLabelMatrix):
                 for label in df_noisy_vectors_flat_sub_source["label"].dropna().unique()
             }
 
+            df_noisy_vectors_sub_source = df_noisy_vectors.loc[
+                df_noisy_vectors["source"] == source
+            ]
+
             for (
                 record,
                 label,
-            ), df_noisy_vectors_sub_record_label in df_noisy_vectors.loc[
-                df_noisy_vectors["source"] == source
-            ].groupby(
+            ), df_noisy_vectors_sub_record_label in df_noisy_vectors_sub_source.sample(
+                estimation_size
+            ).groupby(
                 ["record", "label"]
             ):
                 df_noisy_vectors_flat_without_source_sub_record = (
@@ -120,6 +127,7 @@ class ENLM(weak_nlp.NoisyLabelMatrix):
                     label,
                     df_noisy_vectors_sub_record_label,
                     df_noisy_vectors_flat_without_source_sub_record,
+                    len(df_noisy_vectors_sub_source) // estimation_size,
                 )
 
             for idx, vector in enumerate(self.vectors_noisy):
