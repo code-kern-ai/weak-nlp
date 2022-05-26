@@ -39,8 +39,8 @@ class ENLM(weak_nlp.NoisyLabelMatrix):
                     "false_negatives": 0,
                 }
 
-            df_joined_by_token = df_reference_flat.set_index("record").join(
-                df_noisy_flat.set_index("record"),
+            df_joined_by_token = df_reference_flat.set_index(["record", "token"]).join(
+                df_noisy_flat.set_index(["record", "token"]),
                 how="outer",
                 lsuffix="_reference",
                 rsuffix="_noisy",
