@@ -2,6 +2,8 @@ import pandas as pd
 from typing import Any, Generator, Tuple, List, Optional
 
 from weak_nlp.shared import exceptions
+from weak_nlp.classification import ClassificationAssociation, CNLM
+from weak_nlp.extraction import ExtractionAssociation, ENLM
 
 
 def create_generator(instance: Any) -> Generator[Any, Tuple[str, Any], None]:
