@@ -1,5 +1,3 @@
-![weak-nlp](banner.png)
-
 # 🔮 weak-nlp
 Intelligent information integration based on weak supervision
 
