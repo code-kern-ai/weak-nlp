@@ -6,10 +6,26 @@ from weak_nlp.shared import common_util, exceptions
 
 
 class ClassificationAssociation(weak_nlp.Association):
-    pass
+    """Record <> Label Association, e.g. for ground truths or heuristics
+
+    Args:
+        record (str): Identification for record
+        label (str): Label name
+        confidence (Optional[float], optional): Confidence of the mapping. Defaults to 1.
+    """
 
 
 class CNLM(weak_nlp.NoisyLabelMatrix):
+    """Collection of classification source vectors that can be analyzed w.r.t. 
+    quality metrics (such as the confusion matrix, i.e., true positives etc.), 
+    quantity metrics (intersections and conflicts) or weakly supervisable labels.
+
+    Args:
+        vectors (List[SourceVector]): Containing the source entities for the matrix
+
+    Raises:
+        exceptions.MissingReferenceException: If this raises, you have set to many reference source vectors
+    """
     def __init__(self, vectors: weak_nlp.SourceVector):
         super().__init__(vectors)
 

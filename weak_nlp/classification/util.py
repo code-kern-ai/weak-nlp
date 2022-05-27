@@ -1,10 +1,19 @@
 from collections import defaultdict
 from typing import Optional, Tuple
+import pandas as pd
 
 from weak_nlp.shared import common_util
 
 
-def _ensemble(row) -> Optional[Tuple[str, float]]:
+def _ensemble(row: pd.Series) -> Optional[Tuple[str, float]]:
+    """Integrates all relevant data from a given noisy label matrix row into one weakly supervised classification
+
+    Args:
+        row (pd.Series): Single row from a DataFrame
+
+    Returns:
+        Optional[Tuple[str, float]]: Weakly supervised label and confidence; If confidence <= 0, this returns None.
+    """
     voters = defaultdict(float)
     for column in row.keys():
         pair_or_empty = row[column]

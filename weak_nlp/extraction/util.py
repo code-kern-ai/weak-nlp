@@ -1,11 +1,20 @@
 import pandas as pd
 from collections import defaultdict
-from typing import List, Tuple, Dict, Any, Set
+from typing import List, Tuple, Dict, Any, Set, Optional
 
 from weak_nlp.shared import common_util
 
 
 def get_token_range(df_record: pd.DataFrame) -> Set[int]:
+    """Given some row has a `chunk_idx_start = 4` and `chunk_idx_end = 6`, this calculates the range between,
+    i.e., {4, 5, 6}
+
+    Args:
+        df_record (pd.DataFrame): DataFrame with chunk idxs
+
+    Returns:
+        Set[int]: Set with the range
+    """
     df_record["range"] = df_record.apply(
         lambda x: list(range(x["chunk_idx_start"], x["chunk_idx_end"] + 1)),
         axis=1,
@@ -15,7 +24,18 @@ def get_token_range(df_record: pd.DataFrame) -> Set[int]:
     return token_set
 
 
-def flatten_range_df(df, include_source=True):
+def flatten_range_df(
+    df: pd.DataFrame, include_source: Optional[bool] = True
+) -> pd.DataFrame:
+    """Converts a dataframe in chunk idx format into a flattened format, in which each token is listed as a separate row.
+
+    Args:
+        df (pd.DataFrame): DataFrame with chunk idx format
+        include_source (bool, optional): If True, the formatted DataFrame will keep information about the source per token. Defaults to True.
+
+    Returns:
+        pd.DataFrame: DataFrame containing each token in the range as a row
+    """
     df["range"] = df.apply(
         lambda x: list(range(x["chunk_idx_start"], x["chunk_idx_end"] + 1)),
         axis=1,
@@ -38,12 +58,25 @@ def flatten_range_df(df, include_source=True):
 
 
 def add_conflicts_and_overlaps(
-    quantity,
-    label,
-    df_noisy_vectors_sub_record_label,
-    df_noisy_vectors_without_source_sub_record,
-    estimation_factor,
+    quantity: Dict[Dict[str, int]],
+    label: str,
+    df_noisy_vectors_sub_record_label: pd.DataFrame,
+    df_noisy_vectors_without_source_sub_record: pd.DataFrame,
+    estimation_factor: int,
 ):
+    """For a given noisy vector filtered down to record and label groupings, this calculates the overlaps
+    and conflicts to a set of given other source vectors defined as a DataFrame
+
+    Args:
+        quantity (Dict[Dict[str, int]]): Containing the existing quantity metrics; also the return value
+        label (str): Current label of interest
+        df_noisy_vectors_sub_record_label (pd.DataFrame): Current source vector of interest on record and label grouping
+        df_noisy_vectors_without_source_sub_record (pd.DataFrame): Containing all other noisy vectors without the current source vector of interest on record level
+        estimation_factor (int): Multiplier given that computation is expensive and only a sample size is used to estimate overlaps and conflicts
+
+    Returns:
+        _type_: Containing the existing quantity metrics
+    """
     for _, row in df_noisy_vectors_sub_record_label.iterrows():
         if any(
             [
@@ -70,9 +103,21 @@ def add_conflicts_and_overlaps(
     return quantity
 
 
-def add_noisy_label_chunks(
-    merged_noisy_label_chunks, label, df_quartets_sub_label
+def add_noisy_label_chunks_to_merged(
+    merged_noisy_label_chunks: List[Dict[str, Any]],
+    label: str,
+    df_quartets_sub_label: pd.DataFrame,
 ) -> List[Dict[str, Any]]:
+    """Adds noisy and potentially intersected labels to a cleansed and merged label chunk list
+
+    Args:
+        merged_noisy_label_chunks (List[Dict[str, Any]]): List of merged label chunks
+        label (str): Current label of interest
+        df_quartets_sub_label (pd.DataFrame): Containing noisy and potentially intersected labels
+
+    Returns:
+        List[Dict[str, Any]]: List of merged label chunks
+    """
     df_quartets_sub_label_next = df_quartets_sub_label.shift(-1)
     new_token = True
     for (idx, row), (_, row_next) in zip(
@@ -112,6 +157,14 @@ def add_noisy_label_chunks(
 
 
 def _ensemble(row) -> List[Tuple[str, float, int, int]]:
+    """Integrates all relevant data from a given noisy label matrix row into a list of weakly supervised extraction tags
+
+    Args:
+        row (_type_): Single row from a DataFrame
+
+    Returns:
+        List[Tuple[str, float, int, int]]: List of weakly supervised extraction tags
+    """
     quartets = []
     for column in row.keys():
         quartets.extend(row[column])
@@ -125,7 +178,7 @@ def _ensemble(row) -> List[Tuple[str, float, int, int]]:
             by="chunk_idx_start"
         ).reset_index(drop=True)
 
-        merged_noisy_label_chunks = add_noisy_label_chunks(
+        merged_noisy_label_chunks = add_noisy_label_chunks_to_merged(
             merged_noisy_label_chunks, label, df_quartets_sub_label
         )
 

@@ -7,6 +7,16 @@ from typing import Optional
 
 
 class ExtractionAssociation(weak_nlp.Association):
+    """Record <> Label Association, e.g. for ground truths or heuristics
+
+    Args:
+        record (str): Identification for record
+        label (str): Label name
+        chunk_idx_start (_type_): Beginning of the chunk
+        chunk_idx_end (_type_): End of the chunk
+        confidence (Optional[float], optional): Confidence of the mapping. Defaults to 1.
+    """
+
     def __init__(self, record, label, chunk_idx_start, chunk_idx_end, confidence=1):
         super().__init__(record, label, confidence)
         self.chunk_idx_start = chunk_idx_start
@@ -14,6 +24,17 @@ class ExtractionAssociation(weak_nlp.Association):
 
 
 class ENLM(weak_nlp.NoisyLabelMatrix):
+    """Collection of extraction source vectors that can be analyzed w.r.t.
+    quality metrics (such as the confusion matrix, i.e., true positives etc.),
+    quantity metrics (intersections and conflicts) or weakly supervisable labels.
+
+    Args:
+        vectors (List[SourceVector]): Containing the source entities for the matrix
+
+    Raises:
+        exceptions.MissingReferenceException: If this raises, you have set to many reference source vectors
+    """
+
     def __init__(self, vectors):
         super().__init__(vectors)
 
@@ -112,7 +133,7 @@ class ENLM(weak_nlp.NoisyLabelMatrix):
                 record,
                 label,
             ), df_noisy_vectors_sub_record_label in df_noisy_vectors_sub_source.sample(
-                estimation_size
+                estimation_size, random_state=42
             ).groupby(
                 ["record", "label"]
             ):
