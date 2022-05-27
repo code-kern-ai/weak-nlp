@@ -9,7 +9,7 @@ with open(os.path.join(this_directory, "README.md")) as file:
 
 setup(
     name="weak-nlp",
-    version="0.0.1",
+    version="0.0.2",
     author="Johannes Hötter",
     author_email="johannes.hoetter@kern.ai",
     description="Intelligent information integration based on weak supervision",
@@ -25,7 +25,7 @@ setup(
     package_dir={"": "."},
     packages=find_packages("."),
     install_requires=[
-        "numpy==1.22.4",
-        "pandas==1.4.2"
+        "numpy==1.21.4",
+        "pandas==1.3.4"
     ],
 )
