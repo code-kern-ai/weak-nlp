@@ -24,14 +24,11 @@ def get_token_range(df_record: pd.DataFrame) -> Set[int]:
     return token_set
 
 
-def flatten_range_df(
-    df: pd.DataFrame, include_source: Optional[bool] = True
-) -> pd.DataFrame:
+def flatten_range_df(df: pd.DataFrame) -> pd.DataFrame:
     """Converts a dataframe in chunk idx format into a flattened format, in which each token is listed as a separate row.
 
     Args:
         df (pd.DataFrame): DataFrame with chunk idx format
-        include_source (bool, optional): If True, the formatted DataFrame will keep information about the source per token. Defaults to True.
 
     Returns:
         pd.DataFrame: DataFrame containing each token in the range as a row

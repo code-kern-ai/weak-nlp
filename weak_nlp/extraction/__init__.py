@@ -49,9 +49,8 @@ class ENLM(weak_nlp.NoisyLabelMatrix):
             df_noisy_sub_manual = df_noisy.loc[
                 df_noisy["record"].isin(df_reference["record"].unique())
             ].copy()
-            df_noisy_flat = util.flatten_range_df(
-                df_noisy_sub_manual, include_source=False
-            )
+
+            df_noisy_flat = util.flatten_range_df(df_noisy_sub_manual)
 
             noisy_labels = list(vector_noisy.associations["label"].dropna().unique())
             for label_name in noisy_labels + reference_labels:
@@ -133,7 +132,9 @@ class ENLM(weak_nlp.NoisyLabelMatrix):
                 record,
                 label,
             ), df_noisy_vectors_sub_record_label in df_noisy_vectors_sub_source.sample(
-                estimation_size, random_state=42
+                # this is a rather complex computation, so we estimate it by random sampling
+                estimation_size,
+                random_state=42,
             ).groupby(
                 ["record", "label"]
             ):
