@@ -1,6 +1,6 @@
 import pandas as pd
 from collections import defaultdict
-from typing import List, Tuple, Dict, Any, Set, Optional
+from typing import List, Tuple, Dict, Any, Set
 
 from weak_nlp.shared import common_util
 
@@ -47,9 +47,8 @@ def flatten_range_df(df: pd.DataFrame) -> pd.DataFrame:
                 "confidence": row.confidence,
                 "token": token_idx,
                 "beginner": row_idx == 0,
+                "source": row.source,
             }
-            if include_source:
-                row_ranged["source"] = row.source
             df_concat_ranged.append(row_ranged)
     return pd.DataFrame(df_concat_ranged)
 

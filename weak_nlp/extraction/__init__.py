@@ -1,12 +1,12 @@
-import weak_nlp
 import numpy as np
 import pandas as pd
 from weak_nlp.shared import common_util, exceptions
 from weak_nlp.extraction import util
+from weak_nlp import base
 from typing import Optional
 
 
-class ExtractionAssociation(weak_nlp.Association):
+class ExtractionAssociation(base.Association):
     """Record <> Label Association, e.g. for ground truths or heuristics
 
     Args:
@@ -23,7 +23,7 @@ class ExtractionAssociation(weak_nlp.Association):
         self.chunk_idx_end = chunk_idx_end
 
 
-class ENLM(weak_nlp.NoisyLabelMatrix):
+class ENLM(base.NoisyLabelMatrix):
     """Collection of extraction source vectors that can be analyzed w.r.t.
     quality metrics (such as the confusion matrix, i.e., true positives etc.),
     quantity metrics (intersections and conflicts) or weakly supervisable labels.

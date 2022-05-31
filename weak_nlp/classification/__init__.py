@@ -1,11 +1,10 @@
 import pandas as pd
-import weak_nlp
+from weak_nlp import base
 from weak_nlp.classification import util
-
 from weak_nlp.shared import common_util, exceptions
 
 
-class ClassificationAssociation(weak_nlp.Association):
+class ClassificationAssociation(base.Association):
     """Record <> Label Association, e.g. for ground truths or heuristics
 
     Args:
@@ -15,9 +14,9 @@ class ClassificationAssociation(weak_nlp.Association):
     """
 
 
-class CNLM(weak_nlp.NoisyLabelMatrix):
-    """Collection of classification source vectors that can be analyzed w.r.t. 
-    quality metrics (such as the confusion matrix, i.e., true positives etc.), 
+class CNLM(base.NoisyLabelMatrix):
+    """Collection of classification source vectors that can be analyzed w.r.t.
+    quality metrics (such as the confusion matrix, i.e., true positives etc.),
     quantity metrics (intersections and conflicts) or weakly supervisable labels.
 
     Args:
@@ -26,7 +25,8 @@ class CNLM(weak_nlp.NoisyLabelMatrix):
     Raises:
         exceptions.MissingReferenceException: If this raises, you have set to many reference source vectors
     """
-    def __init__(self, vectors: weak_nlp.SourceVector):
+
+    def __init__(self, vectors: base.SourceVector):
         super().__init__(vectors)
 
     def _set_quality_metrics_inplace(self) -> None:

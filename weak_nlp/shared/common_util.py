@@ -1,9 +1,9 @@
 import pandas as pd
 import numpy as np
-from weak_nlp import NoisyLabelMatrix
+from weak_nlp import base
 
 
-def get_all_noisy_vectors_df(nlm: NoisyLabelMatrix):
+def get_all_noisy_vectors_df(nlm: base.NoisyLabelMatrix):
     dfs = []
     for vector in nlm.vectors_noisy:
         df = pd.DataFrame(vector.associations)
