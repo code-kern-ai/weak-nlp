@@ -1,7 +1,7 @@
 # 🔮 weak-nlp
 Intelligent information integration based on weak supervision
 [![Python 3.9](https://img.shields.io/badge/python-3.9-blue.svg)](https://www.python.org/downloads/release/python-390/)
-[![pypi 0.0.2](https://img.shields.io/badge/pypi-0.0.2-yellow.svg)](https://pypi.org/project/weak-nlp/0.0.2/)
+[![pypi 0.0.3](https://img.shields.io/badge/pypi-0.0.2-yellow.svg)](https://pypi.org/project/weak-nlp/0.0.2/)
 
 ## Installation
 You can set up this library via either running `$ pip install weak-nlp`, or via cloning this repository and running `$ pip install -r requirements.txt` in your repository.
@@ -33,20 +33,20 @@ lf_associations = []
 for text_id, text in enumerate(text):
     label = contains_keywords(text)
     if label is not None:
-        association = weak_nlp.ClassificationAssociation(text_id, label)
+        association = weak_nlp.classification.ClassificationAssociation(text_id, label)
         lf_associations.append(association)
 
 lf_vector = weak_nlp.SourceVector(contains_keywords.__name__, False, lf_associations)
 
 ground_truths = [
-    weak_nlp.ClassificationAssociation(1, "clickbait"),
-    weak_nlp.ClassificationAssociation(2, "regular"),
-    weak_nlp.ClassificationAssociation(3, "regular")
+    weak_nlp.classification.ClassificationAssociation(1, "clickbait"),
+    weak_nlp.classification.ClassificationAssociation(2, "regular"),
+    weak_nlp.classification.ClassificationAssociation(3, "regular")
 ]
 
 gt_vector = weak_nlp.SourceVector("ground_truths", True, ground_truths)
 
-cnlm = weak_nlp.CNLM([gt_vector, lf_vector])
+cnlm = weak_nlp.classification.CNLM([gt_vector, lf_vector])
 ```
 
 Whereas for extraction tasks, your code snippet could look as follows:
@@ -64,19 +64,19 @@ lf_associations = []
 for text_id, text in enumerate(text):
     for triplet in match_keywords(text):
         label, from_idx, to_idx = triplet
-        association = weak_nlp.ExtractionAssociation(text_id, label, from_idx, to_idx)
+        association = weak_nlp.extraction.ExtractionAssociation(text_id, label, from_idx, to_idx)
         lf_associations.append(association)
 
 lf_vector = weak_nlp.SourceVector(match_keywords.__name__, False, lf_associations)
 
 ground_truths = [
-    weak_nlp.ExtractionAssociation(1, "person", 1, 2),
-    weak_nlp.ExtractionAssociation(2, "person", 4, 5),
+    weak_nlp.extraction.ExtractionAssociation(1, "person", 1, 2),
+    weak_nlp.extraction.ExtractionAssociation(2, "person", 4, 5),
 ]
 
 gt_vector = weak_nlp.SourceVector("ground_truths", True, ground_truths)
 
-enlm = weak_nlp.ENLM([gt_vector, lf_vector])
+enlm = weak_nlp.extraction.ENLM([gt_vector, lf_vector])
 ```
 
 ## Roadmap

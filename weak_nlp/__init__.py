@@ -3,8 +3,6 @@ import pandas as pd
 from typing import Any, Generator, Tuple, List, Optional
 
 from weak_nlp.shared import exceptions
-from weak_nlp.classification import ClassificationAssociation, CNLM
-from weak_nlp.extraction import ExtractionAssociation, ENLM
 
 
 def create_generator(instance: Any) -> Generator[Any, Tuple[str, Any], None]:
@@ -35,6 +33,7 @@ class Association(ABC):
         label (str): Label name
         confidence (Optional[float], optional): Confidence of the mapping. Defaults to 1.
     """
+
     def __init__(self, record: str, label: str, confidence: Optional[float] = 1):
         self.record = record
         self.label = label
@@ -54,8 +53,8 @@ class Association(ABC):
 
 
 class SourceVector:
-    """Combines the created associations from one logical source. 
-    Additionally, it marks whether the respective source vector can be seen as a reference vector, 
+    """Combines the created associations from one logical source.
+    Additionally, it marks whether the respective source vector can be seen as a reference vector,
     such as a manually labeled source vector containing the *true* record <> label mappings.
 
     Args:
@@ -63,7 +62,7 @@ class SourceVector:
         is_reference (bool): If set to True, this is seen as the ground truth
         associations (List[Association]): Actual mappings
     """
-    
+
     def __init__(
         self, identifier: str, is_reference: bool, associations: List[Association]
     ):
@@ -79,7 +78,7 @@ class SourceVector:
 
 
 class NoisyLabelMatrix(ABC):
-    """Collection of source vectors that can be analyzed w.r.t. quality metrics (such as the confusion matrix, i.e., true positives etc.), 
+    """Collection of source vectors that can be analyzed w.r.t. quality metrics (such as the confusion matrix, i.e., true positives etc.),
     quantity metrics (intersections and conflicts) or weakly supervisable labels.
 
     Args:
@@ -88,6 +87,7 @@ class NoisyLabelMatrix(ABC):
     Raises:
         exceptions.MissingReferenceException: If this raises, you have set to many reference source vectors
     """
+
     def __init__(self, vectors: List[SourceVector]):
         vectors_reference = [vector for vector in vectors if vector.is_reference]
         if len(vectors_reference) > 1:
@@ -110,14 +110,12 @@ class NoisyLabelMatrix(ABC):
 
     @abstractmethod
     def _set_quality_metrics_inplace(self) -> None:
-        """Calculate quality metrics true positives, false positives and false negatives inplace
-        """
+        """Calculate quality metrics true positives, false positives and false negatives inplace"""
         pass
 
     @abstractmethod
     def _set_quantity_metrics_inplace(self) -> None:
-        """Calculate quantity metrics record coverage, total hits, source conflicts and source overlaps inplace
-        """
+        """Calculate quantity metrics record coverage, total hits, source conflicts and source overlaps inplace"""
         pass
 
     @abstractmethod
