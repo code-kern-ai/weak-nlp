@@ -55,7 +55,7 @@ def flatten_range_df(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def add_conflicts_and_overlaps(
-    quantity: Dict[Dict[str, int]],
+    quantity: Dict[str, Dict[str, int]],
     label: str,
     df_noisy_vectors_sub_record_label: pd.DataFrame,
     df_noisy_vectors_without_source_sub_record: pd.DataFrame,
@@ -65,7 +65,7 @@ def add_conflicts_and_overlaps(
     and conflicts to a set of given other source vectors defined as a DataFrame
 
     Args:
-        quantity (Dict[Dict[str, int]]): Containing the existing quantity metrics; also the return value
+        quantity (Dict[str, Dict[str, int]]): Containing the existing quantity metrics; also the return value
         label (str): Current label of interest
         df_noisy_vectors_sub_record_label (pd.DataFrame): Current source vector of interest on record and label grouping
         df_noisy_vectors_without_source_sub_record (pd.DataFrame): Containing all other noisy vectors without the current source vector of interest on record level
