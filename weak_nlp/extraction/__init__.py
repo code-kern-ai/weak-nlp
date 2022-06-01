@@ -40,7 +40,7 @@ class ENLM(base.NoisyLabelMatrix):
 
     def _set_quality_metrics_inplace(self) -> None:
         df_reference = self.vector_reference.associations
-        df_reference_flat = util.flatten_range_df(df_reference, include_source=False)
+        df_reference_flat = util.flatten_range_df(df_reference)
 
         reference_labels = list(df_reference["label"].dropna().unique())
         for idx, vector_noisy in enumerate(self.vectors_noisy):
