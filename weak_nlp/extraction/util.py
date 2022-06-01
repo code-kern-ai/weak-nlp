@@ -47,8 +47,9 @@ def flatten_range_df(df: pd.DataFrame) -> pd.DataFrame:
                 "confidence": row.confidence,
                 "token": token_idx,
                 "beginner": row_idx == 0,
-                "source": row.source,
             }
+            if "source" in row.keys():
+                row_ranged["source"] = row.source
             df_concat_ranged.append(row_ranged)
     return pd.DataFrame(df_concat_ranged)
 
