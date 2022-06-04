@@ -128,7 +128,7 @@ class ENLM(base.NoisyLabelMatrix):
                 df_noisy_vectors["source"] == source
             ]
 
-            if len(df_noisy_vectors_sub_source_sample) > estimation_size:
+            if len(df_noisy_vectors_sub_source) > estimation_size:
                 df_noisy_vectors_sub_source_sample = df_noisy_vectors_sub_source.sample(
                     # this is a rather complex computation, so we estimate it by random sampling
                     estimation_size,
