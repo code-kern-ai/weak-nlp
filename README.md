@@ -1,7 +1,7 @@
 # 🔮 weak-nlp
 Intelligent information integration based on weak supervision
 [![Python 3.9](https://img.shields.io/badge/python-3.9-blue.svg)](https://www.python.org/downloads/release/python-390/)
-[![pypi 0.0.6](https://img.shields.io/badge/pypi-0.0.6-yellow.svg)](https://pypi.org/project/weak-nlp/0.0.6/)
+[![pypi 0.0.7](https://img.shields.io/badge/pypi-0.0.7-yellow.svg)](https://pypi.org/project/weak-nlp/0.0.6/)
 
 ## Installation
 You can set up this library via either running `$ pip install weak-nlp`, or via cloning this repository and running `$ pip install -r requirements.txt` in your repository.
