@@ -1,3 +1,4 @@
+from typing import Optional
 import pandas as pd
 from weak_nlp import base
 from weak_nlp.classification import util
@@ -146,7 +147,7 @@ class CNLM(base.NoisyLabelMatrix):
         stats_df = pd.DataFrame(statistics)
         return stats_df
 
-    def weakly_supervise(self) -> pd.Series:
+    def weakly_supervise(self, c: Optional[int] =7, k: Optional[int] = 3) -> pd.Series:
         stats_df = self.quality_metrics()
         if len(stats_df) == 0:
             raise exceptions.MissingStatsException(
@@ -177,4 +178,4 @@ class CNLM(base.NoisyLabelMatrix):
             "-"
         )  # hard to deal with np.nan
 
-        return cnlm_df.apply(util._ensemble, axis=1)
+        return cnlm_df.apply(util._ensemble, axis=1, c=c, k=k)

@@ -5,11 +5,13 @@ import pandas as pd
 from weak_nlp.shared import common_util
 
 
-def _ensemble(row: pd.Series) -> Optional[Tuple[str, float]]:
+def _ensemble(row: pd.Series, c: int, k: int) -> Optional[Tuple[str, float]]:
     """Integrates all relevant data from a given noisy label matrix row into one weakly supervised classification
 
     Args:
         row (pd.Series): Single row from a DataFrame
+        c (int): slope of the function
+        k (int): what input should yield 0.5 probability?
 
     Returns:
         Optional[Tuple[str, float]]: Weakly supervised label and confidence; If confidence <= 0, this returns None.
@@ -27,5 +29,5 @@ def _ensemble(row: pd.Series) -> Optional[Tuple[str, float]]:
 
     confidence = max_vote - (sum_votes - max_vote)
     if confidence > 0:
-        confidence = common_util.sigmoid(confidence)
+        confidence = common_util.sigmoid(confidence, c=c, k=k)
         return max_voter, confidence

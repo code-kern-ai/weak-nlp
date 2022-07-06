@@ -28,7 +28,7 @@ def calc_recall(row):
         return row["true_positives"] / denominator
 
 
-def sigmoid(x, c=1, k=1):
+def sigmoid(x, c=1, k=0):
     # c: slope of the function
     # k: what input should yield 0.5 probability?
     return 1 / (1 + np.exp(-c * x + k))

@@ -205,7 +205,7 @@ class ENLM(base.NoisyLabelMatrix):
         stats_df = pd.DataFrame(statistics)
         return stats_df
 
-    def weakly_supervise(self) -> pd.Series:
+    def weakly_supervise(self, c: Optional[int] =7, k: Optional[int] = 3) -> pd.Series:
         stats_df = self.quality_metrics()
         if len(stats_df) == 0:
             raise exceptions.MissingStatsException(
@@ -234,4 +234,4 @@ class ENLM(base.NoisyLabelMatrix):
             enlm_df[vector.identifier] = np.empty((len(enlm_df), 0)).tolist()
             for idx, row in vector_series.iterrows():
                 enlm_df[vector.identifier].loc[idx].append(row["prediction"])
-        return enlm_df.apply(util._ensemble, axis=1)
+        return enlm_df.apply(util._ensemble, axis=1, c=c, k=k)

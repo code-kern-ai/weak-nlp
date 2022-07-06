@@ -153,11 +153,13 @@ def add_noisy_label_chunks_to_merged(
     return merged_noisy_label_chunks
 
 
-def _ensemble(row) -> List[Tuple[str, float, int, int]]:
+def _ensemble(row: pd.Series, c: int, k: int) -> List[Tuple[str, float, int, int]]:
     """Integrates all relevant data from a given noisy label matrix row into a list of weakly supervised extraction tags
 
     Args:
         row (_type_): Single row from a DataFrame
+        c (int): slope of the function
+        k (int): what input should yield 0.5 probability?
 
     Returns:
         List[Tuple[str, float, int, int]]: List of weakly supervised extraction tags
@@ -202,7 +204,7 @@ def _ensemble(row) -> List[Tuple[str, float, int, int]]:
             confidence = row["confidence"]
             tokens = row["token_set"]
             if confidence > 0:
-                confidence = common_util.sigmoid(confidence)
+                confidence = common_util.sigmoid(confidence, c=c, k=k)
                 pred = label, confidence, min(tokens), max(tokens)
                 preds.append(pred)
     return preds

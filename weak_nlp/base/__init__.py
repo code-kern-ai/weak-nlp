@@ -137,8 +137,12 @@ class NoisyLabelMatrix(ABC):
         pass
 
     @abstractmethod
-    def weakly_supervise(self) -> pd.Series:
+    def weakly_supervise(self, c: int, k: int) -> pd.Series:
         """Integrate existing noisy source vectors into one weakly supervised vector (as pandas series)
+
+        Args:
+            c (int): slope of the function
+            k (int): what input should yield 0.5 probability?
 
         Returns:
             pd.Series: Containing the weakly supervised labels

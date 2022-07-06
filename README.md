@@ -1,7 +1,7 @@
 # 🔮 weak-nlp
 Intelligent information integration based on weak supervision
 [![Python 3.9](https://img.shields.io/badge/python-3.9-blue.svg)](https://www.python.org/downloads/release/python-390/)
-[![pypi 0.0.8](https://img.shields.io/badge/pypi-0.0.8-yellow.svg)](https://pypi.org/project/weak-nlp/0.0.6/)
+[![pypi 0.0.9](https://img.shields.io/badge/pypi-0.0.9-yellow.svg)](https://pypi.org/project/weak-nlp/0.0.9/)
 
 ## Installation
 You can set up this library via either running `$ pip install weak-nlp`, or via cloning this repository and running `$ pip install -r requirements.txt` in your repository.
@@ -30,10 +30,10 @@ def contains_keywords(text):
 texts = [...]
 
 lf_associations = []
-for text_id, text in enumerate(text):
+for text_id, text in enumerate(texts):
     label = contains_keywords(text)
     if label is not None:
-        association = weak_nlp.ClassificationAssociation(text_id, label)
+        association = weak_nlp.ClassificationAssociation(text_id + 1, label)
         lf_associations.append(association)
 
 lf_vector = weak_nlp.SourceVector(contains_keywords.__name__, False, lf_associations)
@@ -61,10 +61,10 @@ def match_keywords(text):
 texts = [...]
 
 lf_associations = []
-for text_id, text in enumerate(text):
+for text_id, text in enumerate(texts):
     for triplet in match_keywords(text):
         label, from_idx, to_idx = triplet
-        association = weak_nlp.ExtractionAssociation(text_id, label, from_idx, to_idx)
+        association = weak_nlp.ExtractionAssociation(text_id + 1, label, from_idx, to_idx)
         lf_associations.append(association)
 
 lf_vector = weak_nlp.SourceVector(match_keywords.__name__, False, lf_associations)
