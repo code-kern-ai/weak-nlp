@@ -137,6 +137,7 @@ class ENLM(base.NoisyLabelMatrix):
             else:
                 df_noisy_vectors_sub_source_sample = df_noisy_vectors_sub_source
 
+            estimation_factor = len(df_noisy_vectors_sub_source) // estimation_size
             for (
                 record,
                 label,
@@ -149,13 +150,16 @@ class ENLM(base.NoisyLabelMatrix):
                         & (df_noisy_vectors_flat["record"] == record)
                     ]
                 )
+                
                 quantity = util.add_conflicts_and_overlaps(
                     quantity,
                     label,
                     df_noisy_vectors_sub_record_label,
-                    df_noisy_vectors_flat_without_source_sub_record,
-                    len(df_noisy_vectors_sub_source) // estimation_size,
+                    df_noisy_vectors_flat_without_source_sub_record
                 )
+            for label in quantity.keys():
+                quantity[label]["source_conflicts"] *= estimation_factor
+                quantity[label]["source_overlaps"] *= estimation_factor
 
             for idx, vector in enumerate(self.vectors_noisy):
                 if vector.identifier == source:

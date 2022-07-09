@@ -58,8 +58,7 @@ def add_conflicts_and_overlaps(
     quantity: Dict[str, Dict[str, int]],
     label: str,
     df_noisy_vectors_sub_record_label: pd.DataFrame,
-    df_noisy_vectors_without_source_sub_record: pd.DataFrame,
-    estimation_factor: int,
+    df_noisy_vectors_without_source_sub_record: pd.DataFrame
 ):
     """For a given noisy vector filtered down to record and label groupings, this calculates the overlaps
     and conflicts to a set of given other source vectors defined as a DataFrame
@@ -95,8 +94,6 @@ def add_conflicts_and_overlaps(
             ]
         ):
             quantity[label]["source_overlaps"] += 1
-    quantity[label]["source_conflicts"] *= estimation_factor
-    quantity[label]["source_overlaps"] *= estimation_factor
     return quantity
 
 
