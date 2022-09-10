@@ -5,7 +5,7 @@ import pandas as pd
 from weak_nlp.shared import common_util
 
 
-def _ensemble(row: pd.Series, c: int, k: int) -> Optional[Tuple[str, float]]:
+def _ensemble_single(row: pd.Series, c: int, k: int) -> Optional[Tuple[str, float]]:
     """Integrates all relevant data from a given noisy label matrix row into one weakly supervised classification
 
     Args:
@@ -31,3 +31,24 @@ def _ensemble(row: pd.Series, c: int, k: int) -> Optional[Tuple[str, float]]:
     if confidence > 0:
         confidence = common_util.sigmoid(confidence, c=c, k=k)
         return max_voter, confidence
+
+
+def _ensemble_multi(row: pd.Series, c: int, k: int, correlations: pd.DataFrame):
+    voters = defaultdict(float)
+    for column in row.keys():
+        for pair in row[column]:
+            label_name, confidence = pair
+            voters[label_name] += confidence
+    label_candidates = list(voters.keys())
+    for label_name, confidence in voters.items():
+        confidence = common_util.sigmoid(confidence, c=c, k=k)
+        for label_candidate in label_candidates:
+            if label_candidate != label_name:
+                factor = correlations[label_name][label_candidate]
+                confidence *= 1 + factor
+        voters[label_name] = confidence
+    return [
+        [label_name, confidence]
+        for label_name, confidence in voters.items()
+        if confidence > 0.5
+    ]
