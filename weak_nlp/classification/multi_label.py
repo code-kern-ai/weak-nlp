@@ -2,7 +2,7 @@ from collections import defaultdict
 from typing import List, Optional
 import pandas as pd
 from weak_nlp import base
-from weak_nlp.classification import ClassificationAssociation, ClassificationNLM, util
+from weak_nlp.classification import ClassificationAssociation, ClassificationNLM
 from weak_nlp.shared import common_util, exceptions
 
 

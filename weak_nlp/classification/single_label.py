@@ -1,7 +1,7 @@
 from typing import Optional, Tuple
 import pandas as pd
 from weak_nlp import base
-from weak_nlp.classification import ClassificationAssociation, ClassificationNLM, util
+from weak_nlp.classification import ClassificationAssociation, ClassificationNLM
 from weak_nlp.shared import common_util, exceptions
 from collections import defaultdict
 
@@ -94,6 +94,7 @@ class SingleLabelClassificationNLM(ClassificationNLM):
                     quality[label_name] = {
                         "true_positives": true_positives,
                         "false_positives": false_positives,
+                        "false_negatives": 0,
                     }
                 self.vectors_noisy[idx].quality = quality.copy()
 
