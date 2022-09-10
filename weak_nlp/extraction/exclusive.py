@@ -16,11 +16,6 @@ class ExclusiveEntityExtractionAssociation(ExtractionAssociation):
         confidence (Optional[float], optional): Confidence of the mapping. Defaults to 1.
     """
 
-    def __init__(self, record, label, chunk_idx_start, chunk_idx_end, confidence=1):
-        super().__init__(record, label, confidence)
-        self.chunk_idx_start = chunk_idx_start
-        self.chunk_idx_end = chunk_idx_end
-
 
 class ExclusiveEntityExtractionNLM(ExtractionNLM):
     """Collection of extraction source vectors that can be analyzed w.r.t.
