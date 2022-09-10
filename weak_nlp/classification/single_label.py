@@ -1,12 +1,41 @@
-from typing import Optional
+from typing import Optional, Tuple
 import pandas as pd
 from weak_nlp import base
 from weak_nlp.classification import ClassificationAssociation, ClassificationNLM, util
 from weak_nlp.shared import common_util, exceptions
+from collections import defaultdict
 
 
 class SingleClassificationAssociation(ClassificationAssociation):
     pass
+
+
+def _ensemble(row: pd.Series, c: int, k: int) -> Optional[Tuple[str, float]]:
+    """Integrates all relevant data from a given noisy label matrix row into one weakly supervised classification
+
+    Args:
+        row (pd.Series): Single row from a DataFrame
+        c (int): slope of the function
+        k (int): what input should yield 0.5 probability?
+
+    Returns:
+        Optional[Tuple[str, float]]: Weakly supervised label and confidence; If confidence <= 0, this returns None.
+    """
+    voters = defaultdict(float)
+    for column in row.keys():
+        pair_or_empty = row[column]
+        if pair_or_empty != "-":
+            label_name, confidence = pair_or_empty
+            voters[label_name] += confidence
+
+    max_voter = max(voters, key=voters.get)  # e.g. clickbait
+    sum_votes = sum(list(voters.values()))
+    max_vote = voters[max_voter]
+
+    confidence = max_vote - (sum_votes - max_vote)
+    if confidence > 0:
+        confidence = common_util.sigmoid(confidence, c=c, k=k)
+        return max_voter, confidence
 
 
 class SingleLabelClassificationNLM(ClassificationNLM):
@@ -42,6 +71,7 @@ class SingleLabelClassificationNLM(ClassificationNLM):
                     quality[label_name] = {
                         "true_positives": 0,
                         "false_positives": 0,
+                        "false_negatives": 0,
                     }
 
                 df_inner_join = (
@@ -100,47 +130,6 @@ class SingleLabelClassificationNLM(ClassificationNLM):
                 if vector.identifier == source:
                     self.vectors_noisy[idx].quantity = quantity.copy()
 
-    def quality_metrics(self) -> pd.DataFrame:
-        if self.vector_reference is None:
-            raise exceptions.MissingReferenceException(
-                "Can't calculate the quality metrics without reference vector"
-            )
-        self._set_quality_metrics_inplace()
-
-        statistics = []
-        for vector_noisy in self.vectors_noisy:
-            vector_stats = {"identifier": vector_noisy.identifier}
-            for label_name in vector_noisy.quality.keys():
-                vector_stats["label_name"] = label_name
-                quality = vector_noisy.quality[label_name]
-
-                vector_stats["true_positives"] = quality["true_positives"]
-                vector_stats["false_positives"] = quality["false_positives"]
-                statistics.append(vector_stats.copy())
-
-        stats_df = pd.DataFrame(statistics)
-        if len(stats_df) > 0:
-            stats_df["precision"] = stats_df.apply(common_util.calc_precision, axis=1)
-        return stats_df
-
-    def quantity_metrics(self) -> pd.DataFrame:
-        self._set_quantity_metrics_inplace()
-
-        statistics = []
-        for vector_noisy in self.vectors_noisy:
-            vector_stats = {"identifier": vector_noisy.identifier}
-            for label_name in vector_noisy.quantity.keys():
-                vector_stats["label_name"] = label_name
-
-                quantity = vector_noisy.quantity[label_name]
-                vector_stats["record_coverage"] = quantity["record_coverage"]
-                vector_stats["source_conflicts"] = quantity["source_conflicts"]
-                vector_stats["source_overlaps"] = quantity["source_overlaps"]
-                statistics.append(vector_stats.copy())
-
-        stats_df = pd.DataFrame(statistics)
-        return stats_df
-
     def weakly_supervise(self, c: Optional[int] = 7, k: Optional[int] = 3) -> pd.Series:
         stats_df = self.quality_metrics()
         if len(stats_df) == 0:
@@ -172,4 +161,4 @@ class SingleLabelClassificationNLM(ClassificationNLM):
             "-"
         )  # hard to deal with np.nan
 
-        return cnlm_df.apply(util._ensemble_single, axis=1, c=c, k=k)
+        return cnlm_df.apply(_ensemble, axis=1, c=c, k=k)

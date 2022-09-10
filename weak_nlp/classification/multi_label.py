@@ -1,3 +1,4 @@
+from collections import defaultdict
 from typing import List, Optional
 import pandas as pd
 from weak_nlp import base
@@ -10,6 +11,27 @@ class MultilabelMulticlassAssociation(ClassificationAssociation):
         self.record = record
         self.labels = labels
         self.confidence = confidence
+
+
+def _ensemble(row: pd.Series, c: int, k: int, correlations: pd.DataFrame):
+    voters = defaultdict(float)
+    for column in row.keys():
+        for pair in row[column]:
+            label_name, confidence = pair
+            voters[label_name] += confidence
+    label_candidates = list(voters.keys())
+    for label_name, confidence in voters.items():
+        confidence = common_util.sigmoid(confidence, c=c, k=k)
+        for label_candidate in label_candidates:
+            if label_candidate != label_name:
+                factor = correlations[label_name][label_candidate]
+                confidence *= 1 + factor
+        voters[label_name] = confidence
+    return [
+        [label_name, confidence]
+        for label_name, confidence in voters.items()
+        if confidence > 0.5
+    ]
 
 
 class MultiLabelMultiClassNLM(ClassificationNLM):
@@ -133,49 +155,6 @@ class MultiLabelMultiClassNLM(ClassificationNLM):
                 if vector.identifier == source:
                     self.vectors_noisy[idx].quantity = quantity.copy()
 
-    def quality_metrics(self) -> pd.DataFrame:
-        if self.vector_reference is None:
-            raise exceptions.MissingReferenceException(
-                "Can't calculate the quality metrics without reference vector"
-            )
-        self._set_quality_metrics_inplace()
-
-        statistics = []
-        for vector_noisy in self.vectors_noisy:
-            vector_stats = {"identifier": vector_noisy.identifier}
-            for label_name in vector_noisy.quality.keys():
-                vector_stats["label_name"] = label_name
-                quality = vector_noisy.quality[label_name]
-
-                vector_stats["true_positives"] = quality["true_positives"]
-                vector_stats["false_positives"] = quality["false_positives"]
-                vector_stats["false_negatives"] = quality["false_negatives"]
-                statistics.append(vector_stats.copy())
-
-        stats_df = pd.DataFrame(statistics)
-        if len(stats_df) > 0:
-            stats_df["precision"] = stats_df.apply(common_util.calc_precision, axis=1)
-            stats_df["recall"] = stats_df.apply(common_util.calc_recall, axis=1)
-        return stats_df
-
-    def quantity_metrics(self) -> pd.DataFrame:
-        self._set_quantity_metrics_inplace()
-
-        statistics = []
-        for vector_noisy in self.vectors_noisy:
-            vector_stats = {"identifier": vector_noisy.identifier}
-            for label_name in vector_noisy.quantity.keys():
-                vector_stats["label_name"] = label_name
-
-                quantity = vector_noisy.quantity[label_name]
-                vector_stats["record_coverage"] = quantity["record_coverage"]
-                vector_stats["source_conflicts"] = quantity["source_conflicts"]
-                vector_stats["source_overlaps"] = quantity["source_overlaps"]
-                statistics.append(vector_stats.copy())
-
-        stats_df = pd.DataFrame(statistics)
-        return stats_df
-
     def weakly_supervise(self, c: Optional[int] = 7, k: Optional[int] = 3) -> pd.Series:
         stats_df = self.quality_metrics()
         if len(stats_df) == 0:
@@ -207,5 +186,5 @@ class MultiLabelMultiClassNLM(ClassificationNLM):
                 vector_series = vector_df.set_index("record")["predictions"]
                 cnlm_df[vector.identifier] = vector_series
         return cnlm_df.apply(
-            util._ensemble_multi, axis=1, c=1, k=1, correlations=self.correlations
+            _ensemble, axis=1, c=1, k=1, correlations=self.correlations
         )
