@@ -37,8 +37,10 @@ class ENLM(base.NoisyLabelMatrix):
 
     def __init__(self, vectors):
         super().__init__(vectors)
+        self.errors = None
 
     def _set_quality_metrics_inplace(self) -> None:
+        self.errors = []
         df_reference = self.vector_reference.associations
         df_reference_flat = util.flatten_range_df(df_reference)
 
@@ -49,6 +51,10 @@ class ENLM(base.NoisyLabelMatrix):
             df_noisy_sub_manual = df_noisy.loc[
                 df_noisy["record"].isin(df_reference["record"].unique())
             ].copy()
+
+            if df_noisy_sub_manual.empty:
+                self.errors.append(vector_noisy.identifier)
+                continue
 
             df_noisy_flat = util.flatten_range_df(df_noisy_sub_manual)
 
@@ -141,8 +147,8 @@ class ENLM(base.NoisyLabelMatrix):
             for (
                 record,
                 label,
-            ), df_noisy_vectors_sub_record_label in df_noisy_vectors_sub_source_sample.groupby(
-                ["record", "label"]
+            ), df_noisy_vectors_sub_record_label in (
+                df_noisy_vectors_sub_source_sample.groupby(["record", "label"])
             ):
                 df_noisy_vectors_flat_without_source_sub_record = (
                     df_noisy_vectors_flat.loc[
@@ -150,12 +156,12 @@ class ENLM(base.NoisyLabelMatrix):
                         & (df_noisy_vectors_flat["record"] == record)
                     ]
                 )
-                
+
                 quantity = util.add_conflicts_and_overlaps(
                     quantity,
                     label,
                     df_noisy_vectors_sub_record_label,
-                    df_noisy_vectors_flat_without_source_sub_record
+                    df_noisy_vectors_flat_without_source_sub_record,
                 )
             for label in quantity.keys():
                 quantity[label]["source_conflicts"] *= estimation_factor
@@ -209,7 +215,7 @@ class ENLM(base.NoisyLabelMatrix):
         stats_df = pd.DataFrame(statistics)
         return stats_df
 
-    def weakly_supervise(self, c: Optional[int] =7, k: Optional[int] = 3) -> pd.Series:
+    def weakly_supervise(self, c: Optional[int] = 7, k: Optional[int] = 3) -> pd.Series:
         stats_df = self.quality_metrics()
         if len(stats_df) == 0:
             raise exceptions.MissingStatsException(
