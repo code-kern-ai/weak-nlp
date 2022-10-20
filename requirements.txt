@@ -1,12 +1,2 @@
-black
-certifi
-mypy-extensions
 numpy
 pandas
-pathspec
-platformdirs
-python-dateutil
-pytz
-six
-tinycss2
-tomli
