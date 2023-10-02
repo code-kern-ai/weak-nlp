@@ -3,7 +3,7 @@ import pandas as pd
 from weak_nlp.shared import common_util, exceptions
 from weak_nlp.extraction import util
 from weak_nlp import base
-from typing import Optional
+from typing import Optional, Dict, Any
 
 
 class ExtractionAssociation(base.Association):
@@ -215,15 +215,21 @@ class ENLM(base.NoisyLabelMatrix):
         stats_df = pd.DataFrame(statistics)
         return stats_df
 
-    def weakly_supervise(self, c: Optional[int] = 7, k: Optional[int] = 3) -> pd.Series:
-        stats_df = self.quality_metrics()
-        if len(stats_df) == 0:
-            raise exceptions.MissingStatsException(
-                "Empty statistics; can't compute weak supervision"
-            )
-        stats_lkp = stats_df.set_index(["identifier", "label_name"]).to_dict(
-            orient="index"
-        )  # pairwise [heuristic, label] lookup for precision
+    def weakly_supervise(
+        self,
+        stats_lkp: Optional[Dict[Any, Any]] = None,
+        c: Optional[int] = 7,
+        k: Optional[int] = 3,
+    ) -> pd.Series:
+        if stats_lkp is None:
+            stats_df = self.quality_metrics()
+            if len(stats_df) == 0:
+                raise exceptions.MissingStatsException(
+                    "Empty statistics; can't compute weak supervision"
+                )
+            stats_lkp = stats_df.set_index(["identifier", "label_name"]).to_dict(
+                orient="index"
+            )  # pairwise [heuristic, label] lookup for precision
 
         enlm_df = pd.DataFrame(self.records, columns=["record"])
         enlm_df = enlm_df.set_index("record")
