@@ -149,11 +149,11 @@ class CNLM(base.NoisyLabelMatrix):
 
     def weakly_supervise(
         self,
-        stats_lkp: Optional[Dict[Any, Any]] = None,
+        quality_metrics_overwrite: Optional[Dict[Any, Any]] = None,
         c: Optional[int] = 7,
         k: Optional[int] = 3,
     ) -> pd.Series:
-        if stats_lkp is None:
+        if quality_metrics_overwrite is None:
             stats_df = self.quality_metrics()
             if len(stats_df) == 0:
                 raise exceptions.MissingStatsException(
@@ -162,6 +162,8 @@ class CNLM(base.NoisyLabelMatrix):
             stats_lkp = stats_df.set_index(["identifier", "label_name"]).to_dict(
                 orient="index"
             )  # pairwise [heuristic, label] lookup for precision
+        else:
+            stats_lkp = quality_metrics_overwrite
 
         # We can collect *all* heuristic results for this noisy label matrix
         # and apply weight lookups for each prediction
