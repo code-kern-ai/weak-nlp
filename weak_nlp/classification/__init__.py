@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Dict, Tuple
 import pandas as pd
 from weak_nlp import base
 from weak_nlp.classification import util
@@ -147,15 +147,25 @@ class CNLM(base.NoisyLabelMatrix):
         stats_df = pd.DataFrame(statistics)
         return stats_df
 
-    def weakly_supervise(self, c: Optional[int] =7, k: Optional[int] = 3) -> pd.Series:
-        stats_df = self.quality_metrics()
-        if len(stats_df) == 0:
-            raise exceptions.MissingStatsException(
-                "Empty statistics; can't compute weak supervision"
-            )
-        stats_lkp = stats_df.set_index(["identifier", "label_name"]).to_dict(
-            orient="index"
-        )  # pairwise [heuristic, label] lookup for precision
+    def weakly_supervise(
+        self,
+        quality_metrics_overwrite: Optional[
+            Dict[Tuple[str, str], Dict[str, float]]
+        ] = None,
+        c: Optional[int] = 7,
+        k: Optional[int] = 3,
+    ) -> pd.Series:
+        if quality_metrics_overwrite is None:
+            stats_df = self.quality_metrics()
+            if len(stats_df) == 0:
+                raise exceptions.MissingStatsException(
+                    "Empty statistics; can't compute weak supervision"
+                )
+            stats_lkp = stats_df.set_index(["identifier", "label_name"]).to_dict(
+                orient="index"
+            )  # pairwise [heuristic, label] lookup for precision
+        else:
+            stats_lkp = quality_metrics_overwrite
 
         # We can collect *all* heuristic results for this noisy label matrix
         # and apply weight lookups for each prediction
