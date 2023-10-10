@@ -1,17 +1,14 @@
 ![](weak-nlp.png)
 
 # 🔮 weak-nlp
-
 Intelligent information integration based on weak supervision
 [![Python 3.9](https://img.shields.io/badge/python-3.9-blue.svg)](https://www.python.org/downloads/release/python-390/)
 [![pypi 0.0.13](https://img.shields.io/badge/pypi-0.0.13-yellow.svg)](https://pypi.org/project/weak-nlp/0.0.13/)
 
 ## Installation
-
 You can set up this library via either running `$ pip install weak-nlp`, or via cloning this repository and running `$ pip install -r requirements.txt` in your repository.
 
 A sample installation would be:
-
 ```
 $ conda create --name weak-nlp python=3.9
 $ conda activate weak-nlp
@@ -19,15 +16,12 @@ $ pip install weak-nlp
 ```
 
 ## Usage
-
 The library consists of three main entities:
-
 - **Associations**: an association contains the information of one record <> label mapping. This does not have to be ground truth label for a given record, but can also come from e.g. a labelfunction (see below for an example).
-- **Source vectors**: A source vector combines the created associations from one logical source. Additionally, it marks whether the respective source vector can be seen as a reference vector, such as a manually labeled source vector containing the _true_ record <> label mappings.
+- **Source vectors**: A source vector combines the created associations from one logical source. Additionally, it marks whether the respective source vector can be seen as a reference vector, such as a manually labeled source vector containing the *true* record <> label mappings.
 - **Noisy label matrices**: Collection of source vectors that can be analyzed w.r.t. quality metrics (such as the confusion matrix, i.e., true positives etc.), quantity metrics (intersections and conflicts) or weakly supervisable labels.
 
 The following is an example for building a noisy label matrix for a classification task
-
 ```python
 import weak_nlp
 
@@ -58,7 +52,6 @@ cnlm = weak_nlp.CNLM([gt_vector, lf_vector])
 ```
 
 Whereas for extraction tasks, your code snippet could look as follows:
-
 ```python
 import weak_nlp
 
@@ -89,11 +82,9 @@ enlm = weak_nlp.ENLM([gt_vector, lf_vector])
 ```
 
 ## Roadmap
-
 If you want to have something added, feel free to open an [issue](https://github.com/code-kern-ai/weak-nlp/issues).
 
 ## Contributing
-
 Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
 
 If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
@@ -105,12 +96,10 @@ Don't forget to give the project a star! Thanks again!
 4. Push to the Branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-And please don't forget to leave a ⭐ if you like the work!
+And please don't forget to leave a ⭐ if you like the work! 
 
 ## License
-
 Distributed under the Apache 2.0 License. See LICENSE.txt for more information.
 
 ## Contact
-
 This library is developed and maintained by [kern.ai](https://github.com/code-kern-ai). If you want to provide us with feedback or have some questions, don't hesitate to contact us. We're super happy to help ✌️
